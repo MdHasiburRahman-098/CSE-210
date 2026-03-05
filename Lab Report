@@ -1,0 +1,55 @@
+
+DROP DATABASE lab;
+CREATE DATABASE lab;
+USE lab;
+ 
+CREATE TABLE MEMBER (
+  MemberID int PRIMARY KEY,
+  FullName varchar(100) NOT NULL,
+  Email varchar(100) NOT NULL UNIQUE,
+  Gender ENUM('Male','Female','Other'),
+  Age int CHECK (Age >= 12));
+  
+INSERT INTO MEMBER VALUES 
+(1,'Arif Hasan','arif@gmail.com','Male',23),
+-- (2,'Sadia Rahman','arif@gmail.com','Female',21),
+(3,'Nayeem Ahmed','nayeem@gmail.com','Male',24),
+(4,'Farhana Islam','farhana@gmail.com','Female',26),
+(5,'Rakib Hossain','rakib@gmail.com','Male',29);
+ 
+CREATE TABLE BOOK (
+  BookID INT PRIMARY KEY,
+  Title VARCHAR(100) NOT NULL,
+  ISBN VARCHAR(50) NOT NULL UNIQUE,
+  Price DECIMAL(6,2) CHECK (Price >= 0),
+  Status ENUM('AVAILABLE','BORROWED') DEFAULT 'AVAILABLE');
+ 
+INSERT INTO BOOK VALUES
+(101,'Programming Basics','ISBN101',450,'AVAILABLE'),
+(102,'Web Development','ISBN102',550,'AVAILABLE'),
+(103,'Computer Security','ISBN103',600,'AVAILABLE'),
+-- (104,'Software Engineering','ISBN104',-10,'AVAILABLE'),
+(105,'Machine Learning','ISBN105',1000,'AVAILABLE');
+ 
+CREATE TABLE LOAN (
+  LoanID INT PRIMARY KEY,
+  MemberID INT,
+  BookID INT,
+  CONSTRAINT fk_member FOREIGN KEY (MemberID) REFERENCES MEMBER(MemberID),
+  CONSTRAINT fk_book FOREIGN KEY (BookID) REFERENCES BOOK(BookID));
+ 
+INSERT INTO LOAN VALUES
+(1,1,101),
+-- (2,99,102),
+(3,3,103),
+(4,4,104),
+(5,5,105),
+(6,1,102);
+ 
+ 
+ALTER TABLE MEMBER ADD Phone VARCHAR(15) NOT NULL DEFAULT 'N/A';
+ALTER TABLE BOOK MODIFY Price DECIMAL(8,2);
+ALTER TABLE BOOK CHANGE Status Availability ENUM('AVAILABLE','BORROWED') DEFAULT 'AVAILABLE';
+ALTER TABLE MEMBER DROP COLUMN Gender;
+-- ALTER TABLE MEMBER ADD CONSTRAINT chkphone CHECK ( Phone <> ");
+RENAME TABLE LOAN TO BORROW;
