@@ -1,0 +1,91 @@
+Drop DATABASE X;
+CREATE DATABASE X;
+USE X;
+
+
+CREATE TABLE EMPLOYEE (
+    EmpID INT PRIMARY KEY,
+    EmpName VARCHAR(100) NOT NULL,
+    BasicSalary DECIMAL(10,2) NOT NULL,
+    StartDate DATE NOT NULL,
+    NoOfPub INT NOT NULL CHECK (NoOfPub >= 0),
+    IncrementRate DECIMAL(5,2) DEFAULT 0,
+    UpdatedSalary DECIMAL(10,2)
+);
+
+
+CREATE TABLE SALARY_LOG (
+    LogID INT AUTO_INCREMENT PRIMARY KEY,
+    EmpID INT,
+    OldSalary DECIMAL(10,2),
+    NewSalary DECIMAL(10,2),
+    ChangedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Note VARCHAR(100),
+    FOREIGN KEY (EmpID) REFERENCES EMPLOYEE(EmpID)
+);
+
+INSERT INTO EMPLOYEE (EmpID, EmpName, BasicSalary, StartDate, NoOfPub) VALUES
+(1, 'X', 50000, '2022-01-01', 5),
+(2, 'Y', 45000, '2023-01-01', 3),
+(3, 'Z', 40000, '2022-06-01', 1),
+(4, 'C', 42000, '2024-01-01', 0),
+(5, 'B', 55000, '2020-01-01', 6),
+(6, 'D', 48000, '2021-03-01', 2),
+(7, 'A', 47000, '2023-10-01', 0),
+(8, 'F', 60000, '2022-02-01', 4);
+
+
+DELIMITER $$
+
+CREATE TRIGGER trg_before_update_salary
+BEFORE UPDATE ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+    DECLARE years INT;
+
+    SET years = TIMESTAMPDIFF(YEAR, NEW.StartDate, CURDATE());
+
+    IF years > 1 AND NEW.NoOfPub > 4 THEN
+        SET NEW.IncrementRate = 20;
+    ELSEIF years > 1 AND NEW.NoOfPub IN (2,3) THEN
+        SET NEW.IncrementRate = 10;
+    ELSEIF years > 1 AND NEW.NoOfPub = 1 THEN
+        SET NEW.IncrementRate = 5;
+    ELSE
+        SET NEW.IncrementRate = 0;
+    END IF;
+
+    SET NEW.UpdatedSalary = NEW.BasicSalary + (NEW.BasicSalary * NEW.IncrementRate / 100);
+END$$
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+CREATE TRIGGER trg_after_update_salary
+AFTER UPDATE ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+    IF OLD.UpdatedSalary <> NEW.UpdatedSalary THEN
+        INSERT INTO SALARY_LOG (EmpID, OldSalary, NewSalary, Note)
+        VALUES (
+            NEW.EmpID,
+            OLD.UpdatedSalary,
+            NEW.UpdatedSalary,
+            'Salary updated based on policy'
+        );
+    END IF;
+END$$
+
+DELIMITER ;
+
+
+UPDATE EMPLOYEE SET BasicSalary = BasicSalary WHERE EmpID = 1;
+UPDATE EMPLOYEE SET BasicSalary = BasicSalary WHERE EmpID = 2;
+UPDATE EMPLOYEE SET BasicSalary = BasicSalary WHERE EmpID = 3;
+UPDATE EMPLOYEE SET BasicSalary = BasicSalary WHERE EmpID = 4;
+
+
+SELECT * FROM EMPLOYEE;
+SELECT * FROM SALARY_LOG;
