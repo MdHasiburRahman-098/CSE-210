@@ -1,0 +1,141 @@
+DROP DATABASE university_join_lab;
+CREATE DATABASE university_join_lab;
+USE university_join_lab;
+
+
+CREATE TABLE DEPARTMENT (
+    DeptID INT PRIMARY KEY,
+    DeptName VARCHAR(100) NOT NULL UNIQUE,
+    Building VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE STUDENT (
+    StudentID INT PRIMARY KEY,
+    FullName VARCHAR(100) NOT NULL,
+    DeptID INT,
+    Batch VARCHAR(20) NOT NULL,
+    CGPA DECIMAL(3,2),
+    FOREIGN KEY (DeptID) REFERENCES DEPARTMENT(DeptID)
+);
+
+CREATE TABLE COURSE (
+    CourseID INT PRIMARY KEY,
+    CourseTitle VARCHAR(100) NOT NULL,
+    Credit INT CHECK (Credit > 0),
+    DeptID INT,
+    FOREIGN KEY (DeptID) REFERENCES DEPARTMENT(DeptID)
+);
+
+CREATE TABLE ENROLLMENT (
+    EnrollID INT PRIMARY KEY,
+    StudentID INT,
+    CourseID INT,
+    Semester VARCHAR(20) NOT NULL,
+    Marks INT CHECK (Marks >= 0 AND Marks <= 100),
+    FOREIGN KEY (StudentID) REFERENCES STUDENT(StudentID),
+    FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID)
+);
+
+
+INSERT INTO DEPARTMENT VALUES
+(1, 'Computer Science', 'A Block'),
+(2, 'Electrical Engineering', 'B Block'),
+(3, 'Business Administration', 'C Block'),
+(4, 'Mathematics', 'D Block');
+
+INSERT INTO STUDENT VALUES
+(101, 'Sabbir Ahmed', 1, '2021', 3.75),
+(102, 'Sara Khan', 1, '2022', 3.60),
+(103, 'Tanvir Hasan', 2, '2021', 3.40),
+(104, 'Sumaiya Akter', 3, '2020', 3.85),
+(105, 'Rakib Hossain', 2, '2022', 3.20),
+(106, 'Sadia Islam', 4, '2021', 3.90),
+(107, 'Arif Rahman', 3, '2020', 3.50),
+(108, 'Shila Das', 4, '2022', 3.70);
+
+INSERT INTO COURSE VALUES
+(201, 'Database Systems', 3, 1),
+(202, 'Data Structures', 3, 1),
+(203, 'Circuit Analysis', 3, 2),
+(204, 'Marketing Principles', 3, 3),
+(205, 'Linear Algebra', 3, 4),
+(206, 'Statistics', 3, 4);
+
+INSERT INTO ENROLLMENT VALUES
+(1, 101, 201, 'Spring 2023', 85),
+(2, 101, 202, 'Spring 2023', 78),
+(3, 102, 201, 'Spring 2023', 88),
+(4, 103, 203, 'Spring 2023', 70),
+(5, 104, 204, 'Fall 2022', 92),
+(6, 105, 203, 'Spring 2023', 65),
+(7, 106, 205, 'Fall 2022', 95),
+(8, 107, 204, 'Fall 2022', 75),
+(9, 108, 206, 'Spring 2023', 80),
+(10, 106, 206, 'Spring 2023', 89),
+(11, 102, 202, 'Fall 2022', 82),
+(12, 103, 201, 'Fall 2022', 68);
+
+
+SELECT s.FullName, d.DeptName
+FROM STUDENT s
+INNER JOIN DEPARTMENT d ON s.DeptID = d.DeptID;
+
+SELECT s.FullName, c.CourseTitle, e.Semester, e.Marks
+FROM ENROLLMENT e
+INNER JOIN STUDENT s ON e.StudentID = s.StudentID
+INNER JOIN COURSE c ON e.CourseID = c.CourseID;
+
+SELECT s.FullName, e.CourseID
+FROM STUDENT s
+LEFT JOIN ENROLLMENT e ON s.StudentID = e.StudentID;
+
+SELECT c.CourseTitle, e.StudentID
+FROM COURSE c
+LEFT JOIN ENROLLMENT e ON c.CourseID = e.CourseID;
+
+SELECT d.DeptName, COUNT(s.StudentID) AS TotalStudents
+FROM DEPARTMENT d
+LEFT JOIN STUDENT s ON d.DeptID = s.DeptID
+GROUP BY d.DeptName;
+
+SELECT c.CourseTitle, COUNT(e.StudentID) AS TotalEnrolled
+FROM COURSE c
+LEFT JOIN ENROLLMENT e ON c.CourseID = e.CourseID
+GROUP BY c.CourseTitle;
+
+SELECT c.CourseTitle,
+       AVG(e.Marks) AS AvgMarks,
+       MAX(e.Marks) AS MaxMarks,
+       MIN(e.Marks) AS MinMarks
+FROM COURSE c
+LEFT JOIN ENROLLMENT e ON c.CourseID = e.CourseID
+GROUP BY c.CourseTitle;
+
+SELECT s.FullName,
+       COUNT(e.CourseID) AS TotalCourses,
+       AVG(e.Marks) AS AvgMarks
+FROM STUDENT s
+LEFT JOIN ENROLLMENT e ON s.StudentID = e.StudentID
+GROUP BY s.FullName;
+
+SELECT s.FullName, AVG(e.Marks) AS AvgMarks
+FROM STUDENT s
+JOIN ENROLLMENT e ON s.StudentID = e.StudentID
+GROUP BY s.FullName
+ORDER BY AvgMarks DESC
+LIMIT 3;
+
+SELECT d.DeptName, COUNT(s.StudentID) AS TotalStudents
+FROM DEPARTMENT d
+JOIN STUDENT s ON d.DeptID = s.DeptID
+GROUP BY d.DeptName
+HAVING COUNT(s.StudentID) > 2;
+
+SELECT DISTINCT s.FullName, e.Marks
+FROM STUDENT s
+JOIN ENROLLMENT e ON s.StudentID = e.StudentID
+WHERE e.Marks BETWEEN 60 AND 85;
+
+SELECT FullName
+FROM STUDENT
+WHERE FullName LIKE 'S%' OR FullName LIKE '%a%';
